@@ -83,7 +83,7 @@ b = rand(1); %placeholder, delete
 
 fprintf('Initial classifier performance on train data:\n')
 confidences = [features_pos; features_neg]*w + b;
-label_vector = [ones(size(features_pos,1),1); -1*ones(size(features_neg,1),1)];
+label_vector = [ones(size(features_pos,1),1); -1*ones(size(features_neg,1),1)]; 
 [tp_rate, fp_rate, tn_rate, fn_rate] =  report_accuracy( confidences, label_vector );
 
 % Visualize how well separated the positive and negative examples are at
