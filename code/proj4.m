@@ -1,3 +1,4 @@
+
 % Sliding window face detection with linear SVM. 
 % All code by James Hays, except for pieces of evaluation code from Pascal
 % VOC toolkit. Images from CMU+MIT face database, CalTech Web Face
