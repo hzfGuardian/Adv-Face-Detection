@@ -58,12 +58,18 @@ feature_params = struct('template_size', 36, 'hog_cell_size', 6);
 
 %% Step 1. Load positive training crops and random negative examples
 %YOU CODE 'get_positive_features' and 'get_random_negative_features'
+if exist('features_pos.mat', 'file') && exist('features_neg.mat', 'file')
+    load('features_pos.mat', 'features_pos');
+    load('features_neg.mat', 'features_neg');
+else
+    features_pos = get_positive_features( train_path_pos, feature_params );
 
-features_pos = get_positive_features( train_path_pos, feature_params );
-
-num_negative_examples = 10000; %Higher will work strictly better, but you should start with 10000 for debugging
-features_neg = get_random_negative_features( non_face_scn_path, feature_params, num_negative_examples);
-
+    num_negative_examples = 10000; %Higher will work strictly better, but you should start with 10000 for debugging
+    features_neg = get_random_negative_features( non_face_scn_path, feature_params, num_negative_examples);
+    
+    save('features_pos.mat', 'features_pos');
+    save('features_neg.mat', 'features_neg');
+end
     
 %% step 2. Train Classifier
 % Use vl_svmtrain on your training features to get a linear classifier
@@ -77,15 +83,23 @@ features_neg = get_random_negative_features( non_face_scn_path, feature_params, 
 %w = rand((feature_params.template_size / feature_params.hog_cell_size)^2 * 31,1); %placeholder, delete
 %b = rand(1); %placeholder, delete
 
-label_pos = ones(size(features_pos, 1), 1);
-label_neg = -1 * ones(size(features_neg, 1), 1);
+if exist('svm_w.mat', 'file') && exist('svm_b.mat', 'file')
+    load('svm_w.mat', 'w');
+    load('svm_b.mat', 'b');
+else
+    label_pos = ones(size(features_pos, 1), 1);
+    label_neg = -1 * ones(size(features_neg, 1), 1);
 
-labels = [label_pos; label_neg];
-features = [features_pos', features_neg'];
+    labels = [label_pos; label_neg];
+    features = [features_pos', features_neg'];
 
-lambda = 0.0001;
+    lambda = 0.0001;
 
-[w, b] = vl_svmtrain(features, labels, lambda);
+    [w, b] = vl_svmtrain(features, labels, lambda);
+    
+    save('svm_w.mat', 'w');
+    save('svm_b.mat', 'b');
+end
 
 %% step 3. Examine learned classifier
 % You don't need to modify anything in this section. The section first
