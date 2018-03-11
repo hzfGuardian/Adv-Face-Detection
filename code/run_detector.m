@@ -83,7 +83,7 @@ for i = 1:length(test_scenes)
         for row = 1 : step_size : height - temp_size
             for col = 1 : step_size : width - temp_size
 
-                hog = vl_hog(single(cur_image(row:row + temp_size - 1, col:col + temp_size - 1,:)), cell_size);
+                hog = vl_hog(single(cur_img(row:row + temp_size - 1, col:col + temp_size - 1,:)), cell_size);
                 conf = (hog(:)')*w + b;
                 if conf > 0.9 
                     cur_x_min = curr_exp * col;
