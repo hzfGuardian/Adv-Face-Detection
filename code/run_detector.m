@@ -46,6 +46,13 @@ bboxes = zeros(0,4);
 confidences = zeros(0,1);
 image_ids = cell(0,1);
 
+temp_size = feature_params.template_size;
+cell_size = feature_params.hog_cell_size;
+
+% parameter
+scale = 0.9;
+step_size = 3;
+
 for i = 1:length(test_scenes)
       
     fprintf('Detecting faces in %s\n', test_scenes(i).name)
@@ -57,11 +64,45 @@ for i = 1:length(test_scenes)
     
     %You can delete all of this below.
     % Let's create 15 random detections per image
-    cur_x_min = rand(15,1) * size(img,2);
-    cur_y_min = rand(15,1) * size(img,1);
-    cur_bboxes = [cur_x_min, cur_y_min, cur_x_min + rand(15,1) * 50, cur_y_min + rand(15,1) * 50];
-    cur_confidences = rand(15,1) * 4 - 2; %confidences in the range [-2 2]
-    cur_image_ids(1:15,1) = {test_scenes(i).name};
+    %cur_x_min = []; % rand(15,1) * size(img,2);
+    %cur_y_min = []; % rand(15,1) * size(img,1);
+    cur_bboxes = zeros(0,4); % [cur_x_min, cur_y_min, cur_x_min + rand(15,1) * 50, cur_y_min + rand(15,1) * 50];
+    cur_confidences = zeros(0,1); % rand(15,1) * 4 - 2; %confidences in the range [-2 2]
+    cur_image_ids = cell(0, 1); % (1:15,1) = {test_scenes(i).name};
+    
+    curr_exp = 1;
+    [height, width, ~] = size(img);
+
+    cur_img = img;
+    % if we choose each sliding window in this image, we obtain the box
+    % with highest score
+    while height >= temp_size && width >= temp_size
+        % for each loop of while, we resize the image as 0.9 times of
+        % original, slide the window in this image to get all windows with
+        % conf > 0.9
+        for row = 1 : step_size : height - temp_size
+            for col = 1 : step_size : width - temp_size
+
+                hog = vl_hog(single(cur_image(row:row + temp_size - 1, col:col + temp_size - 1,:)), cell_size);
+                conf = (hog(:)')*w + b;
+                if conf > 0.9 
+                    cur_x_min = curr_exp * col;
+                    cur_y_min= curr_exp * row;
+                    % record all enough confident boxes
+                    cur_bboxes = [cur_bboxes; ...
+                        round([cur_x_min, cur_y_min, cur_x_min + curr_exp * temp_size - 1, cur_y_min + curr_exp * temp_size - 1])];
+                    cur_confidences = [cur_confidences; conf];
+                    cur_image_ids = [cur_image_ids; test_scenes(i).name];
+                end
+
+            end
+        end
+        cur_img = imresize(cur_img, scale);
+        curr_exp = curr_exp / scale;
+        [height, width, ~] = size(cur_img);
+        %height = floor(height * scale);
+        %width = floor(width * scale);
+    end
     
     %non_max_supr_bbox can actually get somewhat slow with thousands of
     %initial detections. You could pre-filter the detections by confidence,
