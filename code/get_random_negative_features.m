@@ -36,5 +36,21 @@ image_files = dir( fullfile( non_face_scn_path, '*.jpg' ));
 num_images = length(image_files);
 
 % placeholder to be deleted
-features_neg = rand(100, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
+%features_neg = rand(num_samples, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
 
+features_neg = zeros(num_samples, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
+
+for index = 1:num_samples
+    
+    img_path = fullfile(non_face_scn_path, image_files(randi(num_images)).name);
+    img = imread(img_path);
+    [hei, wid, ~] = size(img);
+    
+    pos_top = randi(hei - feature_params.template_size);
+    pos_left = randi(wid - feature_params.template_size);
+    
+    img_temp = imcrop(img, [pos_left, pos_top, feature_params.template_size-1, feature_params.template_size-1]);
+    
+    hog = vl_hog(single(img_temp), feature_params.hog_cell_size);
+    features_neg(index, :) = hog(:)';
+end

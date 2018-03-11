@@ -32,11 +32,13 @@ image_files = dir( fullfile( train_path_pos, '*.jpg') ); %Caltech Faces stored a
 num_images = length(image_files);
 
 % placeholder to be deleted
-features_pos = rand(num_images, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
+%features_pos = rand(num_images, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
+
+features_pos = zeros(num_images, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
 
 for index = 1:num_images
     img_path = fullfile(train_path_pos, image_files(index).name);
     img = imread(img_path);
     hog = vl_hog(single(img), feature_params.hog_cell_size);
-    features_pos(index, :) = hog;
+    features_pos(index, :) = hog(:)';    
 end

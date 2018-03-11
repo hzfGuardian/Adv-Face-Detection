@@ -73,8 +73,18 @@ features_neg = get_random_negative_features( non_face_scn_path, feature_params, 
 % work best e.g. 0.0001, but you can try other values
 
 %YOU CODE classifier training. Make sure the outputs are 'w' and 'b'.
-w = rand((feature_params.template_size / feature_params.hog_cell_size)^2 * 31,1); %placeholder, delete
-b = rand(1); %placeholder, delete
+%w = rand((feature_params.template_size / feature_params.hog_cell_size)^2 * 31,1); %placeholder, delete
+%b = rand(1); %placeholder, delete
+
+label_pos = ones(size(features_pos, 1), 1);
+label_neg = -1 * ones(size(features_neg, 1), 1);
+
+labels = [label_pos; label_neg];
+features = [features_pos', features_neg'];
+
+lambda = 0.0001;
+
+[w, b] = vl_svmtrain(features, labels, lambda);
 
 %% step 3. Examine learned classifier
 % You don't need to modify anything in this section. The section first
