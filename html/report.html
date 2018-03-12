@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>CS 5421 Project</title>
+<title>CS 5421 Report</title>
 <link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
 <link rel="stylesheet" title="Default" href="styles/github.css">
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
@@ -144,78 +144,85 @@ table td img {
 
 <h2>CS 5421 / Project 2 / Face Detection with a Sliding Window</h2>
 
-<div style="float: right; padding: 20px">
-<img src="detections_albert.jpg.png" />
-<p style="font-size: 14px">Example of a right floating element.</p>
-</div>
 
 <p> 	Our core algorithm for this project is Hog feature extraction and SVM classifier. </p>
 
 <ol>
-<li>list element 1.</li>
-<li>list element 2.</li>
-<li>etc.</li>
+<li>Load positive training crops and random negative examples.(We code)</li>
+<li>Train Classifier.(We code)</li>
+<li>Examine learned classifier.</li>
+<li>Run detector on test set.(We code)</li>
+<li>Evaluate and Visualize detections.</li>
 </ol>
 
-<p> 	Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p>Before we start our experiment, we need to firstly download folder "data/" from the course page and then put it into the same folder as "code/" and "html/".</p>
 
 <div style="clear:both">
-<h3>Example heading</h3>
+<h3>Loading examples</h3>
 
-<p> 	Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-<h2>Example of code with highlighting</h2>
-The javascript in the <code>highlighting</code> folder is configured to do syntax highlighting in code blocks such as the one below.<p>
+<p> 	We load all positive examples from "data/caltech_faces/Caltech_CropFaces" and randomly N negative ones from "data/train_non_face_scenes", where we choose N = 10000. Notice that higher value of N will work strictly better. After loading them, we should extract Hog features by calling function "vl_hog" from VLFeat lib. We provide part of example codes on processing positive examples in below. </p>
 
 <pre><code>
 %example code
-for i = 1:length(offset)
-    source = imread(sprintf('%s/source_%02d.jpg',data_dir,i));
-    mask   = imread(sprintf('%s/mask_%02d.jpg',data_dir,i));
-    target = imread(sprintf('%s/target_%02d.jpg',data_dir,i));
+features_pos = zeros(num_images, (feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
+
+for index = 1:num_images
+	img_path = fullfile(train_path_pos, image_files(index).name);
+	img = imread(img_path);
+	hog = vl_hog(single(img), feature_params.hog_cell_size);
+	features_pos(index, :) = hog(:)';    
+end
 
 </code></pre>
 
-<h3>Results in a table</h3>
+<p>For convenience of multi-experiments, we save two matrixs, features_pos and features_neg, into .mat files separately after the first loading. </p>
+
+<h3>Train Classifier</h3>
+
+<p> 	After obtaining positive and negative examples, we use vl_svmtrain on our training features to get a linear classifier. In vl_svmtrain function, there are 3 parameters: features, labels, lambda, where labels are vectors with -1 and 1 values, and lambda we provide is 0.0001. Maybe smaller lambda will work better. Similar to above, we save parameters w and b of svm classifier into .mat file separately after first loading. </p>
+
+<h3>Run detector on test set</h3>
+
+<p> 	Here we execute a multi-scale detection on each test image, which means that we use sliding-window scanning on certain image in each inner loop, while we resize the image into a smaller scale to repeat the scanning tasks in each outer loop until the final size has reached the template size of Hog detector. So here we have three important parameters: scale, step_size and conf_threshold. </p>
+
+<ol>
+<li>scale: resize rate on each outer loop of multi-scale, in our experiment we set as 0.9(such value will make detector slower but gets more accurate results)</li>
+<li>step_size: step size of sliding window, in our experiment we set as 3.</li>
+<li>conf_threshold: threshold of confidence for which we choose out as true box. We set as 0.9. </li>
+</ol>
+
+<p> 	After we choose out all confident boxes, we use non_max_supr_bbox actually get somewhat slow with thousands of initial detections. And finally we can get all of correct boxes. In the following tables we will show our results on data/extra_test_scenes directory and the precision-recall curve. </p>
 
 <table border=1>
 <tr>
 <td>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg"  width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
+<img src="detections_cs143_2011_class_easy.jpg.png" width="24%"/>
+<img src="detections_cs143_2011_class_hard.jpg.png"  width="24%"/>
+<img src="detections_cs143_2013_class_easy_01.jpg.png" width="24%"/>
+<img src="detections_cs143_2013_class_easy_02.jpg.png" width="24%"/>
 </td>
 </tr>
 
 <tr>
 <td>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg"  width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
-<img src="placeholder.jpg" width="24%"/>
+<img src="detections_cs143_2013_class_hard_01.jpg.png" width="24%"/>
+<img src="detections_cs143_2013_class_hard_02.jpg.png"  width="24%"/>
+<img src="detections_cs143_2013_class_hard_03.jpg.png" width="24%"/>
+<img src="detections_faculty_roster.jpg.png" width="24%"/>
 </td>
 </tr>
 
 </table>
 
+
+
 <center>
 <p>
-Face template HoG visualization for the starter code. This is completely random, but it should actually look like a face once you train a reasonable classifier.
+Detection on data/extra_test_scenes, using confidence threshold is 1.2, step size 3, scale rate 0.9
 <p>
-<img src="hog_template.png">
+<img src="average_precision.png" />
 <p>
-Precision Recall curve for the starter code.
+Final Precision-Recall Curve on test_scene set
 <p>
-<img src="average_precision.png">
-<p>
-Example of detection on the test set from the starter code.
-<img src="detections_Argentina.jpg.png">
 
 </center>
-
-<div style="clear:both" >
-<p> 	From the result picture above, we can clearly see that the green boxes contains the true positive cases we detected by SVM classifier, and the yellow ones represents the ground truth, and the false positive cases in red ones.</p>
-</div>
-</body>
-</html>

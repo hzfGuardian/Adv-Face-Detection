@@ -85,7 +85,7 @@ for i = 1:length(test_scenes)
 
                 hog = vl_hog(single(cur_img(row:row + temp_size - 1, col:col + temp_size - 1,:)), cell_size);
                 conf = (hog(:)')*w + b;
-                if conf > 0.9 
+                if conf > 1.2 
                     cur_x_min = curr_exp * col;
                     cur_y_min= curr_exp * row;
                     % record all enough confident boxes
